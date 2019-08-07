@@ -3,9 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class ThemeInfo {
-  int colorInt;
+  bool isDart;
 
-  ThemeInfo({this.colorInt});
+  ThemeInfo({this.isDart});
 }
 
 class LocalInfo {
@@ -15,23 +15,27 @@ class LocalInfo {
 }
 
 class ConfigModel with ChangeNotifier {
-  ThemeInfo _themeInfo = ThemeInfo(colorInt: Colors.red.value);
+  ThemeInfo _themeInfo = ThemeInfo(isDart: false);
   LocalInfo _localInfo = LocalInfo(localIndex: 0);
 
-  int get colorInt => _themeInfo.colorInt;
+  bool get colorInt => _themeInfo.isDart;
 
   int get localIndex => _localInfo.localIndex;
 
-  int getThemeColor() {
+  bool getTheme() {
     /// 获取SP中theme的值
-    return SpUtil.getInt('config_theme_color', defValue: colorInt);
+    return SpUtil.getBool('config_theme_color', defValue: false);
   }
 
-  Future<void> setTheme(colorInt) async {
-    /// SP保存theme值
-    SpUtil.putInt('config_theme_color', colorInt);
+  String getThemeText() {
+    return getTheme() ? "夜间模式" : "日间模式";
+  }
 
-    _themeInfo.colorInt = colorInt;
+  Future<void> setTheme(bool isDart) async {
+    /// SP保存theme值
+    SpUtil.putBool('config_theme_color', isDart);
+
+    _themeInfo.isDart = isDart;
 
     notifyListeners();
   }
@@ -49,18 +53,6 @@ class ConfigModel with ChangeNotifier {
     notifyListeners();
   }
 }
-
-List<int> themeColors = [
-  Colors.red.value,
-  Colors.blue.value,
-  Colors.yellow.value,
-  Colors.green.value,
-  Colors.brown.value,
-  Colors.orange.value,
-  Colors.indigo.value,
-  Colors.pink.value,
-  Colors.black.value
-];
 
 /// 枚举: 支持的语言种类
 enum SupportLocale {
@@ -82,9 +74,9 @@ Map<SupportLocale, Locale> mapLocales = {
 
 /// SupportLocale 对应的含义
 Map<SupportLocale, String> get mapSupportLocale => {
-  SupportLocale.FOLLOW_SYSTEM: "跟随系统",
-  SupportLocale.SIMPLIFIED_CHINESE: "简体中文",
-  SupportLocale.TRADITIONAL_CHINESE_TW: "繁體中文(臺灣)",
-  SupportLocale.TRADITIONAL_CHINESE_HK: "繁體中文(香港)",
-  SupportLocale.ENGLISH: "English"
-};
+      SupportLocale.FOLLOW_SYSTEM: "跟随系统",
+      SupportLocale.SIMPLIFIED_CHINESE: "简体中文",
+      SupportLocale.TRADITIONAL_CHINESE_TW: "繁體中文(臺灣)",
+      SupportLocale.TRADITIONAL_CHINESE_HK: "繁體中文(香港)",
+      SupportLocale.ENGLISH: "English"
+    };

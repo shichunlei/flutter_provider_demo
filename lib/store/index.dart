@@ -25,7 +25,9 @@ class Store {
   }
 
   //  通过Consumer获取状态数据
-  static Consumer connect<T>({builder, child}) {
+  static Consumer connect<T>(
+      {Function(BuildContext context, T value, Widget child) builder,
+      Widget child}) {
     return Consumer<T>(builder: builder, child: child);
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_provider/generated/i18n.dart';
 import 'package:flutter_provider/store/index.dart';
@@ -10,16 +11,17 @@ class MyHomePage extends StatelessWidget {
 
   MyHomePage({Key key, this.title}) : super(key: key);
 
-  TextEditingController controller = TextEditingController();
+  final controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('$title')),
-      body: Center(
+      body: Container(
         child: Column(
           children: <Widget>[
-            Store.connect<CounterModel>(builder: (context, snapshot, child) {
+            Store.connect<CounterModel>(builder:
+                (BuildContext context, CounterModel snapshot, Widget child) {
               return RaisedButton(
                 onPressed: () {
                   snapshot.increment();
@@ -27,11 +29,13 @@ class MyHomePage extends StatelessWidget {
                 child: Text('${S.of(context).add}'),
               );
             }),
-            Store.connect<CounterModel>(builder: (context, snapshot, child) {
+            Store.connect<CounterModel>(builder:
+                (BuildContext context, CounterModel snapshot, Widget child) {
               print('================= home page counter widget rebuild');
               return Text('${snapshot.count}');
             }),
-            Store.connect<CounterModel>(builder: (context, snapshot, child) {
+            Store.connect<CounterModel>(builder:
+                (BuildContext context, CounterModel snapshot, Widget child) {
               return RaisedButton(
                 onPressed: snapshot.count > 0
                     ? () {
@@ -41,20 +45,16 @@ class MyHomePage extends StatelessWidget {
                 child: Text('${S.of(context).minus}'),
               );
             }),
-            Store.connect<UserModel>(builder: (context, snapshot, child) {
-              print('================= home page name Widget rebuild');
-              return Text('${Store.value<UserModel>(context).name}');
-            }),
+            Text('${Store.value<UserModel>(context).name}'),
             TextField(controller: controller),
-            Store.connect<UserModel>(builder: (context, snapshot, child) {
-              return RaisedButton(
-                child: Text('${S.of(context).change_name}'),
-                onPressed: () {
-                  snapshot.setName(controller.text);
-                },
-              );
-            }),
-            Store.connect<ConfigModel>(builder: (context, snapshot, child) {
+            RaisedButton(
+              child: Text('${S.of(context).change_name}'),
+              onPressed: () {
+                Store.value<UserModel>(context).setName(controller.text);
+              },
+            ),
+            Store.connect<ConfigModel>(builder:
+                (BuildContext context, ConfigModel snapshot, Widget child) {
               print('================= home page local Widget rebuild');
               return RaisedButton(
                 onPressed: () => _openLanguageSelectMenu(context),
@@ -62,42 +62,77 @@ class MyHomePage extends StatelessWidget {
                     '${mapSupportLocale[SupportLocale.values[snapshot.localIndex]]}'),
               );
             }),
+            Divider(),
+            Store.connect<ConfigModel>(
+              builder:
+                  (BuildContext context, ConfigModel snapshot, Widget child) {
+                return ListTile(
+                  title: Text(snapshot.getThemeText()),
+                  trailing: CupertinoSwitch(
+                    activeColor: Colors.green,
+                    value: snapshot.getTheme(),
+                    onChanged: (value) {
+                      snapshot.setTheme(value);
+                    },
+                  ),
+                );
+              },
+            ),
+            Store.connect<ConfigModel>(
+              builder:
+                  (BuildContext context, ConfigModel snapshot, Widget child) {
+                return Row(
+                  children: <Widget>[
+                    Flexible(
+                      child: RadioListTile<String>(
+                        value: "夜间模式", title: Text("夜间模式"),
+                        groupValue: snapshot.getThemeText(),
+
+                        /// 变化时回调
+                        onChanged: (value) {
+                          debugPrint('$value');
+                          snapshot.setTheme('夜间模式' == value);
+                        },
+                      ),
+                    ),
+                    Flexible(
+                      child: RadioListTile<String>(
+                        value: "日间模式",
+                        title: Text("日间模式"),
+                        groupValue: snapshot.getThemeText(),
+                        onChanged: (value) {
+                          debugPrint('$value');
+                          snapshot.setTheme('夜间模式' == value);
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            )
+          ],
+        ),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: <Widget>[
+            UserAccountsDrawerHeader(
+                accountEmail: Text('1558053958@qq.com'),
+                accountName: Text('scl'),
+                decoration: BoxDecoration(
+                    color: Colors.blue,
+                    image: DecorationImage(
+                        image: NetworkImage(
+                            'http://pic1.16pic.com/00/31/72/16pic_3172062_b.jpg'),
+                        fit: BoxFit.cover)))
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         child: Center(child: Icon(Icons.color_lens)),
-        onPressed: () {
-          showModalBottomSheet(
-              context: context,
-              builder: (builder) {
-                return _bottomSheetItem(context);
-              });
-        },
+        onPressed: () {},
       ),
     );
-  }
-
-  Widget _bottomSheetItem(BuildContext context) {
-    return Store.connect<ConfigModel>(builder: (context, snapshot, child) {
-      return ListView(
-        children: themeColors.map((item) {
-          return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Color(item),
-            ),
-            selected: snapshot.getThemeColor() == item,
-            title: Text('Item $item'),
-            onTap: () {
-              print('Theme item $item');
-              snapshot.setTheme(item);
-
-              Navigator.of(context).pop();
-            },
-          );
-        }).toList(),
-      );
-    });
   }
 
   /// 国际化
@@ -113,15 +148,13 @@ class MyHomePage extends StatelessWidget {
   List<Widget> _items(context) {
     return SupportLocale.values.map((local) {
       int index = SupportLocale.values.indexOf(local);
-      return Store.connect<ConfigModel>(builder: (context, snapshot, child) {
-        return ListTile(
-            title: Text("${mapSupportLocale[local]}"),
-            onTap: () {
-              snapshot.setLocal(index);
-              Navigator.pop(context);
-            },
-            selected: snapshot.localIndex == index);
-      });
+      return ListTile(
+          title: Text("${mapSupportLocale[local]}"),
+          onTap: () {
+            Store.value<ConfigModel>(context).setLocal(index);
+            Navigator.pop(context);
+          },
+          selected: Store.value<ConfigModel>(context).localIndex == index);
     }).toList();
   }
 }
